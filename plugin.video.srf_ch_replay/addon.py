@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 import sys
 import json
 import urllib.request
@@ -15,6 +13,7 @@ import traceback
 from io import StringIO
 import gzip
 from urllib.parse import urlparse
+from string import ascii_lowercase
 
 #'Base settings'
 #'Start of the plugin functionality is at the end of the file'
@@ -29,9 +28,14 @@ if not os.path.isdir(addon_work_folder):
     os.mkdir(addon_work_folder)
 FavoritesFile = xbmcvfs.translatePath("special://profile/addon_data/" + addonID + "/" + addonID + ".favorites")
 numberOfEpisodesPerPage = str(addon.getSetting("numberOfShowsPerPage"))
+useOfficialApi = addon.getSetting("useOfficialApi") == "true"
+consumerKey = addon.getSetting("consumerKey")
+consumerSecret = addon.getSetting("consumerSecret")
 tr = addon.getLocalizedString
 
-
+##################################
+# OLD SRF Podcast Plugin api methods
+##################################
 def open_srf_url(urlstring):
     request = urllib.request.Request(urlstring)
     request.add_header('Accept-encoding', 'gzip')
@@ -245,6 +249,43 @@ def _parameters_string_to_dict(parameters):
                 paramDict[paramSplits[0]] = paramSplits[1]
     return paramDict
 
+##################################
+# NEW SRF official api methods
+##################################
+def choose_channel():
+    nextMode = 'chooseTvShowLetter'
+    add_channel('srf', tr(30014), nextMode)
+    add_channel('swi', tr(30015), nextMode)
+    add_channel('rts', tr(30016), nextMode)
+    add_channel('rsi', tr(30017), nextMode)
+    add_channel('rtr', tr(30018), nextMode)
+    xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
+
+def add_channel(id, name, mode):
+    directoryurl = sys.argv[0]+"?channel="+id+"&mode="+str(mode)
+    liz = xbmcgui.ListItem(name)
+    return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
+
+def choose_tv_show_letter(channel):
+    nextMode = 'listTvShows'
+    add_letter(channel, '#', tr(30019), nextMode)
+    for c in ascii_lowercase:
+        add_letter(channel, c, c, nextMode)
+    xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
+    
+def add_letter(channel, letter, letterDescription, mode):
+    directoryurl = sys.argv[0]+"?mode="+str(mode)+"&channel="+str(channel)+"&letter="+letter
+    liz = xbmcgui.ListItem(letterDescription)
+    return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
+
+def list_tv_shows(channel, letter):
+    listTvShows()
+
+def list_episodes(url, showbackground, page):
+    listEpisodes(url, showbackground, page)
+
+def play_episode(url):
+    playepisode(url)
 
 #'Start'
 params = _parameters_string_to_dict(sys.argv[2])
@@ -252,11 +293,24 @@ mode = params.get('mode', '')
 url = params.get('url', '')
 showbackground = urllib.parse.unquote_plus(params.get('showbackground', ''))
 page = params.get('page', '')
+channel = params.get('channel', '')
+letter = params.get('letter', '')
 
-if mode == 'listEpisodes':
-    listEpisodes(url, showbackground, page)
-elif mode == 'playepisode':
-    playepisode(url)
+if useOfficialApi:
+    if mode == 'playepisode':
+        play_episode(url)
+    elif mode == 'listEpisodes':
+        list_episodes(url, showbackground, page)
+    elif mode == 'listTvShows':
+        list_tv_shows(channel, letter)
+    elif mode == 'chooseTvShowLetter':
+        choose_tv_show_letter(channel)
+    else:
+        choose_channel()
 else:
-    listTvShows()
-    
+    if mode == 'playepisode':
+        playepisode(url)
+    elif mode == 'listEpisodes':
+        listEpisodes(url, showbackground, page)
+    else:
+        listTvShows()
