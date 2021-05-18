@@ -261,8 +261,8 @@ def choose_channel():
     add_channel('rtr', tr(30018), nextMode)
     xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
 
-def add_channel(id, name, mode):
-    directoryurl = sys.argv[0]+"?channel="+id+"&mode="+str(mode)
+def add_channel(channelId, name, mode):
+    directoryurl = sys.argv[0]+"?channel="+str(channelId)+"&mode="+str(mode)
     liz = xbmcgui.ListItem(name)
     return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
 

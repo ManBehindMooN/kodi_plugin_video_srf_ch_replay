@@ -29,6 +29,6 @@ Just zip the `plugin.video.srf_ch_replay` folder. Alternatively use the ant `bui
 Go to the add-ons menu and select "Install from zip file". Follow the instructions and at the end select the zip file and install. The "SRF Replay" plugin will appear immediately in your add-ons menu. If you get and error that your usb stick can not be read just restart Kodi and try again.
 
 ### Kodi repository
-Since the tag 2.0.0 the plugin is in the official [Kodi 19 (Matrix) repository](https://github.com/xbmc/repo-plugins/tree/matrix/plugin.video.srf_ch_replay).
+Since the tag 2.0.0 the plugin is in the official [Kodi 19 (Matrix) repository](https://github.com/xbmc/repo-plugins/tree/matrix/plugin.video.srf_ch_replay) / [Kodi Add-on Page](https://kodi.tv/addons/matrix/plugin.video.srf_ch_replay).
 
 Go to the add-ons menu and select "Install from repository". Search for the plugin and hit "install".
