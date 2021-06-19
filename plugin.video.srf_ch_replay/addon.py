@@ -252,6 +252,12 @@ def _parameters_string_to_dict(parameters):
 ##################################
 # NEW SRF official api methods
 ##################################
+def _check_srf_token():
+    #check if there is a token and still valid
+    xbmc.log('TODO _check_srf_token')
+    #get a token and save token with TS in userdata (https://kodi.wiki/view/Userdata)
+    #in case of an error log and dialog for the user
+
 def choose_channel():
     nextMode = 'chooseTvShowLetter'
     _add_channel('srf', tr(30014), nextMode)
@@ -279,12 +285,15 @@ def _add_letter(channel, letter, letterDescription, mode):
     return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
 
 def list_tv_shows(channel, letter):
+    #TODO get token and get tv shows
     list_all_tv_shows()
 
 def list_episodes(url, showbackground, page):
+    #TODO get token and get episodes
     list_all_episodes(url, showbackground, page)
 
 def play_episode(url):
+    #TODO get token and play episode
     playepisode(url)
 
 #'Start'
@@ -297,6 +306,7 @@ channel = params.get('channel', '')
 letter = params.get('letter', '')
 
 if useOfficialApi:
+    _check_srf_token()
     if mode == 'playepisode':
         play_episode(url)
     elif mode == 'listEpisodes':
