@@ -52,21 +52,7 @@ def open_srf_url(urlstring):
     return response
 
 
-def _add_show(name, url, mode, desc, iconimage, page):
-    """
-    helper method to create a folder with subitems
-    """
-    directoryurl = sys.argv[0] + "?url=" + urllib.parse.quote_plus(url) + "&mode=" + str(mode) + "&showbackground=" + urllib.parse.quote_plus(iconimage) + "&page=" + str(page) + "&channel=srf"
-    liz = xbmcgui.ListItem(name)
-    liz.setLabel2(desc)
-    liz.setArt({'poster': iconimage, 'banner': iconimage, 'fanart': iconimage, 'thumb': iconimage})
-    liz.setInfo(type="Video", infoLabels={"title": name, "plot": desc, "plotoutline": desc})
-    xbmcplugin.setContent(pluginhandle, 'tvshows')
-    ok = xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
-    return ok
-
-
-def list_all_tv_shows():
+def list_all_tv_shows(letter):
     """
     this method list all available TV shows
     """
@@ -91,12 +77,28 @@ def list_all_tv_shows():
             picture = show['Image']['ImageRepresentations']['ImageRepresentation'][0]['url']
         except:
             picture = ''
-        _add_show(title, show['id'], mode, desc, picture, page)
+        
+        firstTitleLetter = title[:1]
+        if (firstTitleLetter.lower() == letter) or (not firstTitleLetter.isalpha() and not str(letter).isalpha()):
+            _add_show(title, show['id'], mode, desc, picture, page)
 
     xbmcplugin.addSortMethod(pluginhandle, 1)
     xbmcplugin.endOfDirectory(pluginhandle)
     xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
-   
+
+
+def _add_show(name, url, mode, desc, iconimage, page):
+    """
+    helper method to create a folder with subitems
+    """
+    directoryurl = sys.argv[0] + "?url=" + urllib.parse.quote_plus(url) + "&mode=" + str(mode) + "&showbackground=" + urllib.parse.quote_plus(iconimage) + "&page=" + str(page) + "&channel=srf"
+    liz = xbmcgui.ListItem(name)
+    liz.setLabel2(desc)
+    liz.setArt({'poster': iconimage, 'banner': iconimage, 'fanart': iconimage, 'thumb': iconimage})
+    liz.setInfo(type="Video", infoLabels={"title": name, "plot": desc, "plotoutline": desc})
+    xbmcplugin.setContent(pluginhandle, 'tvshows')
+    ok = xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
+    return ok 
 
 
 def _addLink(name, url, mode, desc, iconurl, length, pubdate, showbackground):
@@ -255,7 +257,9 @@ def _parameters_string_to_dict(parameters):
 def _check_srf_token():
     #check if there is a token and still valid
     xbmc.log('TODO _check_srf_token')
-    #get a token and save token with TS in userdata (https://kodi.wiki/view/Userdata)
+    addon.setSetting('srfToken', 'foo') 
+    addon.setSetting('srfTokenTS', 'fooTS') 
+    #get a token and save token with TS in userdata (https://kodi.wiki/view/Userdata) https://forum.kodi.tv/showthread.php?tid=184921
     #in case of an error log and dialog for the user
 
 def choose_channel():
@@ -286,7 +290,7 @@ def _add_letter(channel, letter, letterDescription, mode):
 
 def list_tv_shows(channel, letter):
     #TODO get token and get tv shows
-    list_all_tv_shows()
+    list_all_tv_shows(letter)
 
 def list_episodes(url, showbackground, page):
     #TODO get token and get episodes
@@ -322,5 +326,7 @@ else:
         playepisode(url)
     elif mode == 'listEpisodes':
         list_all_episodes(url, showbackground, page)
+    elif mode == 'listTvShows':
+        list_all_tv_shows(letter)
     else:
-        list_all_tv_shows()
+        choose_tv_show_letter(channel)
