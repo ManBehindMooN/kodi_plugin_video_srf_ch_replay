@@ -36,6 +36,8 @@ tr = addon.getLocalizedString
 ##################################
 # OLD SRF Podcast Plugin api methods
 ##################################
+
+
 def open_srf_url(urlstring):
     request = urllib.request.Request(urlstring)
     request.add_header('Accept-encoding', 'gzip')
@@ -77,7 +79,7 @@ def list_all_tv_shows(letter):
             picture = show['Image']['ImageRepresentations']['ImageRepresentation'][0]['url']
         except:
             picture = ''
-        
+
         firstTitleLetter = title[:1]
         if (firstTitleLetter.lower() == letter) or (not firstTitleLetter.isalpha() and not str(letter).isalpha()):
             _add_show(title, show['id'], mode, desc, picture, page)
@@ -98,7 +100,7 @@ def _add_show(name, url, mode, desc, iconimage, page):
     liz.setInfo(type="Video", infoLabels={"title": name, "plot": desc, "plotoutline": desc})
     xbmcplugin.setContent(pluginhandle, 'tvshows')
     ok = xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
-    return ok 
+    return ok
 
 
 def _addLink(name, url, mode, desc, iconurl, length, pubdate, showbackground):
@@ -254,13 +256,16 @@ def _parameters_string_to_dict(parameters):
 ##################################
 # NEW SRF official api methods
 ##################################
+
+
 def _check_srf_token():
-    #check if there is a token and still valid
+    # check if there is a token and still valid
     xbmc.log('TODO _check_srf_token')
-    addon.setSetting('srfToken', 'foo') 
-    addon.setSetting('srfTokenTS', 'fooTS') 
-    #get a token and save token with TS in userdata (https://kodi.wiki/view/Userdata) https://forum.kodi.tv/showthread.php?tid=184921
-    #in case of an error log and dialog for the user
+    addon.setSetting('srfToken', 'foo')
+    addon.setSetting('srfTokenTS', 'fooTS')
+    # get a token and save token with TS in userdata (https://kodi.wiki/view/Userdata) https://forum.kodi.tv/showthread.php?tid=184921
+    # in case of an error log and dialog for the user
+
 
 def choose_channel():
     nextMode = 'chooseTvShowLetter'
@@ -271,10 +276,12 @@ def choose_channel():
     _add_channel('rtr', tr(30018), nextMode)
     xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
 
+
 def _add_channel(channelId, name, mode):
-    directoryurl = sys.argv[0]+"?channel="+str(channelId)+"&mode="+str(mode)
+    directoryurl = sys.argv[0] + "?channel=" + str(channelId) + "&mode=" + str(mode)
     liz = xbmcgui.ListItem(name)
     return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
+
 
 def choose_tv_show_letter(channel):
     nextMode = 'listTvShows'
@@ -282,23 +289,28 @@ def choose_tv_show_letter(channel):
     for c in ascii_lowercase:
         _add_letter(channel, c, c, nextMode)
     xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
-    
+
+
 def _add_letter(channel, letter, letterDescription, mode):
-    directoryurl = sys.argv[0]+"?mode="+str(mode)+"&channel="+str(channel)+"&letter="+letter
+    directoryurl = sys.argv[0] + "?mode=" + str(mode) + "&channel=" + str(channel) + "&letter=" + letter
     liz = xbmcgui.ListItem(letterDescription)
     return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
 
+
 def list_tv_shows(channel, letter):
-    #TODO get token and get tv shows
+    # TODO get token and get tv shows
     list_all_tv_shows(letter)
 
+
 def list_episodes(url, showbackground, page):
-    #TODO get token and get episodes
+    # TODO get token and get episodes
     list_all_episodes(url, showbackground, page)
 
+
 def play_episode(url):
-    #TODO get token and play episode
+    # TODO get token and play episode
     playepisode(url)
+
 
 #'Start'
 params = _parameters_string_to_dict(sys.argv[2])
