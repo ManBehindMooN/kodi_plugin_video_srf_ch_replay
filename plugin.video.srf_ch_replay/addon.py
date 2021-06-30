@@ -32,6 +32,8 @@ addon_work_folder = xbmcvfs.translatePath("special://profile/addon_data/" + addo
 if not os.path.isdir(addon_work_folder):
     os.mkdir(addon_work_folder)
 FavoritesFile = xbmcvfs.translatePath("special://profile/addon_data/" + addonID + "/" + addonID + ".favorites")
+#TODO enable again but better to pass the pull request 
+#forceViewMode = addon.getSetting("forceView") == "true"
 numberOfEpisodesPerPage = str(addon.getSetting("numberOfShowsPerPage"))
 useOfficialApi = addon.getSetting("useOfficialApi") == "true"
 consumerKey = addon.getSetting("consumerKey")
@@ -42,6 +44,8 @@ tr = addon.getLocalizedString
 #####################################
 # NEW SRF Podcast Plugin api methods
 #####################################
+
+#TODO refactor code
 
 
 def _http_request(host, method, path, query=None, headers={}, body_dict=None, exp_code=None):

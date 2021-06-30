@@ -14,3 +14,10 @@ The plugin can be used most efficiently in combination with favorites. When all 
 The TV show just appears and the Kodi favorite menu and can be selected from there without going through the whole list every time.
 
 Every time you select a TV show from your favorites only this show's content will be loaded. You will save click and loading time.
+
+## Official SRF API (optional)
+
+TODO https://developer.srgssr.ch/user/register for consumer key & secret (no pictures - just short)
+
+TODO more channels
+TODO explain old favorites do not work anymore
