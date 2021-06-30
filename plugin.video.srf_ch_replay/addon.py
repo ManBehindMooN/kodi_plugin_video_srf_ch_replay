@@ -15,6 +15,11 @@ import gzip
 from urllib.parse import urlparse
 from string import ascii_lowercase
 
+# imports for new API
+import requests
+import base64
+
+
 #'Base settings'
 #'Start of the plugin functionality is at the end of the file'
 addon = xbmcaddon.Addon()
@@ -33,9 +38,113 @@ consumerKey = addon.getSetting("consumerKey")
 consumerSecret = addon.getSetting("consumerSecret")
 tr = addon.getLocalizedString
 
-##################################
+
+#####################################
+# NEW SRF Podcast Plugin api methods
+#####################################
+
+
+def _http_request(host, method, path, query=None, headers={}, body_dict=None, exp_code=None):
+    uri = f'https://{host}{path}'
+    print(method, uri)
+    if body_dict:
+        print(json.dumps(body_dict, indent=4))
+    res = requests.request(method, uri, params=query, headers=headers, json=body_dict)
+    if exp_code:
+        if type(exp_code) is not list:
+            exp_code = [exp_code]
+        if (res.status_code not in exp_code):
+            raise Exception(str(res.status_code) + ':' + res.text)
+    return res
+
+# def _rdebug(r):
+#    print(r.request.headers)
+#    print(r.status_code)
+#    for h, v in r.headers.items():
+#        print(f"hdr: {h}: {v}")
+#    #print(json.dumps(r.json()))
+#    print(r.text)
+
+
+SRF_API_HOST = "api.srgssr.ch"
+
+
+def _srf_api_auth_token():
+
+    query = {"grant_type": "client_credentials"}
+    headers = {"Authorization": "Basic " + str(base64.b64encode(f"{consumerKey}:{consumerSecret}".encode("utf-8")), "utf-8")}
+    r = _http_request(SRF_API_HOST, 'POST', "/oauth/v1/accesstoken", query=query, headers=headers, exp_code=200)
+    #_rdebug(r)
+    return r.json()["access_token"]
+
+
+def _srf_api_get(path, *, query=None, bearer, exp_code=None):
+    headers = {}
+    if bearer:
+        headers.update({"Authorization": f"Bearer {bearer}"})
+    return _http_request(SRF_API_HOST, 'GET', path, query, headers, None, exp_code)
+
+
+def srf_api_get(path, query):
+    token = _srf_api_auth_token()
+    if token:
+        r = _srf_api_get(path, bearer=token, query=query, exp_code=200)
+    return r.json()
+
+
+def list_tv_shows_new(channel, letter):
+    PATH = "/videometadata/v2/tv_shows/alphabetical"
+    query = {"bu": channel, "characterFilter": letter}
+    response = srf_api_get(PATH, query=query)
+    shows = response["showList"]
+    mode = 'listEpisodes'
+
+    for show in shows:
+        showid = show.get('id')
+        title = show.get('title')
+        desc = show.get('description')
+        picture = show.get('imageUrl')
+        _add_show(title, showid, mode, desc, picture, "")
+
+    xbmcplugin.addSortMethod(pluginhandle, 1)
+    xbmcplugin.endOfDirectory(pluginhandle)
+    xbmcplugin.endOfDirectory(handle=pluginhandle, succeeded=True)
+
+
+def list_episodes_new(channel, showid, showbackground, page):
+    PATH = f"/videometadata/v2/latest_episodes/shows/{showid}"
+    query = {"bu": channel}
+    print(f"page: {page}")
+    if page:
+        query.update({"next": page})
+    else:
+        query.update({"pageSize": numberOfEpisodesPerPage})
+    response = srf_api_get(PATH, query=query)
+    show = response['show']
+    episodeList = response["episodeList"]
+
+    for episode in episodeList:
+        title = show.get('title') + ' - ' + episode.get('title')
+        desc = episode.get('description')
+        picture = episode.get('imageUrl')
+        pubdate = episode.get('publishedDate')
+        # TODO: For now just take the first item from mediaList. OK?
+        media = episode.get('mediaList')[0]
+        url = media.get('id')
+        length = int(media.get('duration', 0)) / 1000 / 60
+        _addLink(title, url, 'playepisode', desc, picture, length, pubdate, showbackground)
+
+    next_page_url = response.get('next')
+    if next_page_url:
+        next_param = urllib.parse.parse_qs(urllib.parse.urlparse(next_page_url).query).get('next')[0]
+        # TODO: No page number available
+        _addnextpage(tr(30005).format("?", "?"), showid, 'listEpisodes', '', showbackground, next_param)
+
+    xbmcplugin.endOfDirectory(pluginhandle)
+
+#####################################
 # OLD SRF Podcast Plugin api methods
-##################################
+#####################################
 
 
 def open_srf_url(urlstring):
@@ -297,16 +406,6 @@ def _add_letter(channel, letter, letterDescription, mode):
     return xbmcplugin.addDirectoryItem(pluginhandle, url=directoryurl, listitem=liz, isFolder=True)
 
 
-def list_tv_shows(channel, letter):
-    # TODO get token and get tv shows
-    list_all_tv_shows(letter)
-
-
-def list_episodes(url, showbackground, page):
-    # TODO get token and get episodes
-    list_all_episodes(url, showbackground, page)
-
-
 def play_episode(url):
     # TODO get token and play episode
     playepisode(url)
@@ -320,15 +419,17 @@ showbackground = urllib.parse.unquote_plus(params.get('showbackground', ''))
 page = params.get('page', '')
 channel = params.get('channel', '')
 letter = params.get('letter', '')
+# TODO get token once and cache via kodi url
+token = params.get('token', '')
 
 if useOfficialApi:
-    _check_srf_token()
+    #_check_srf_token()
     if mode == 'playepisode':
         play_episode(url)
     elif mode == 'listEpisodes':
-        list_episodes(url, showbackground, page)
+        list_episodes_new(channel, url, showbackground, page)
     elif mode == 'listTvShows':
-        list_tv_shows(channel, letter)
+        list_tv_shows_new(channel, letter)
     elif mode == 'chooseTvShowLetter':
         choose_tv_show_letter(channel)
     else:
