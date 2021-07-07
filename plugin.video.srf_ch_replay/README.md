@@ -18,6 +18,7 @@ Every time you select a TV show from your favorites only this show's content wil
 ## Official SRF API (optional)
 
 TODO https://developer.srgssr.ch/user/register for consumer key & secret (no pictures - just short)
+https://developer.srgssr.ch/content/easy-description-get-accesstoken
 
 TODO more channels
 TODO explain old favorites do not work anymore
